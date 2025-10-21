@@ -3,7 +3,7 @@ import { Send, CheckCircle, AlertCircle, Loader } from "lucide-react";
 
 export default function SMSAuthForm() {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [userInfo, setUserInfo] = useState({
     name: "",
     phone: "",
   });
@@ -28,19 +28,19 @@ export default function SMSAuthForm() {
   const handleSendSMS = async () => {
     setError("");
 
-    if (!formData.name.trim()) {
+    if (!userInfo.name.trim()) {
       setError("お名前を入力してください");
       return;
     }
 
-    if (!formData.phone.trim()) {
+    if (!userInfo.phone.trim()) {
       setError("電話番号を入力してください");
       return;
     }
 
     setLoading(true);
 
-    const cleanPhone = formData.phone.replace(/[-\s+]/g, "");
+    const cleanPhone = userInfo.phone.replace(/[-\s+]/g, "");
     const phoneRegex = /^(0[0-9]{9,10}|81[0-9]{9,10})$/;
     if (!phoneRegex.test(cleanPhone)) {
       setError("正しい電話番号を入力してください");
@@ -52,7 +52,7 @@ export default function SMSAuthForm() {
       const response = await fetch("/api/send-sms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: formData.phone }),
+        body: JSON.stringify({ phone: userInfo.phone }),
       });
 
       const data = await response.json();
@@ -100,7 +100,7 @@ export default function SMSAuthForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: formData.phone,
+          phone: userInfo.phone,
           code: verificationCode,
         }),
       });
@@ -122,30 +122,66 @@ export default function SMSAuthForm() {
 
   const submitForm = async (token) => {
     try {
+      // 1. プロラインのフォームに送信
+      console.log("📤 プロラインフォームに送信中...");
+      const prolineSuccess = await submitToProline();
+
+      if (!prolineSuccess) {
+        setError("プロラインへの送信に失敗しました");
+        return;
+      }
+
+      // 2. メール送信
       const response = await fetch("/api/submit-form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
+          name: userInfo.name,
+          phone: userInfo.phone,
           token: token,
-          diagnosisType: "猪突猛進チャレンジャー",
-          uid: uid, // uidも送信
+          diagnosisType: "",
+          uid: uid,
         }),
       });
 
       if (response.ok) {
         setSuccess(true);
 
-        // プロラインのシナリオ移動を発火
+        // 3. プロラインのシナリオ移動を発火
         if (uid) {
           fireProlineBeacon(uid);
         }
       } else {
-        setError("送信に失敗しました。もう一度お試しください。");
+        setError("メール送信に失敗しました");
       }
     } catch (err) {
+      console.error("送信エラー:", err);
       setError("送信エラーが発生しました");
+    }
+  };
+
+  // プロラインのフォームに送信する関数
+  const submitToProline = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("uid", uid || "");
+      formData.append("txt[WEBXn9xZwh]", userInfo.name);
+      formData.append("txt[IeWqkHLxV0]", userInfo.phone);
+
+      const response = await fetch(
+        "https://u28edw94.autosns.app/fm/WJm3eVNBtb",
+        {
+          method: "POST",
+          body: formData,
+          mode: "no-cors",
+        }
+      );
+
+      console.log("✅ プロラインフォーム送信完了");
+      return true;
+    } catch (error) {
+      console.error("❌ プロラインフォーム送信エラー:", error);
+      return false;
     }
   };
 
@@ -184,7 +220,6 @@ export default function SMSAuthForm() {
               【氏名】【電話番号】をご入力いただくと、SMSで認証コードが届きます。
             </p>
           </div>
-
           <div className="flex items-center justify-center mb-8">
             <div className="flex items-center space-x-2">
               <div
@@ -253,30 +288,36 @@ export default function SMSAuthForm() {
                   LINEアプリを開いてご確認ください。
                 </p>
               </div>
-              {uid && (
-                <p className="text-xs text-gray-400 mt-4">
-                  シナリオ移動ID: {uid}
-                </p>
-              )}
             </div>
           ) : (
             <>
               {step === 1 && (
                 <div>
                   <div className="space-y-6">
+                    <p className="text-gray-600 text-sm mb-4">
+                      下記フォームに【氏名】【電話番号】をご入力ください。
+                      <br />
+                      ご本人様確認のため、SMSで認証コードをお送りします。
+                      <br />
+                      認証完了後、すぐに診断結果の完全版をお届けします。
+                    </p>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         お名前 <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        value={formData.name}
+                        value={userInfo.name}
                         onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
+                          setUserInfo({ ...userInfo, name: e.target.value })
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="山田太郎"
+                        placeholder="例）山田太郎"
                       />
+                      <p className="mt-1 text-xs text-gray-500">
+                        ※スペースなしでご入力ください。
+                      </p>
                     </div>
 
                     <div>
@@ -285,15 +326,15 @@ export default function SMSAuthForm() {
                       </label>
                       <input
                         type="tel"
-                        value={formData.phone}
+                        value={userInfo.phone}
                         onChange={(e) =>
-                          setFormData({ ...formData, phone: e.target.value })
+                          setUserInfo({ ...userInfo, phone: e.target.value })
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="09012345678"
+                        placeholder="例）090-1234-5678"
                       />
-                      <p className="mt-2 text-xs text-gray-500">
-                        ハイフンなしで入力してください
+                      <p className="mt-1 text-xs text-gray-500">
+                        ハイフンあり・なしどちらでもOK
                       </p>
                     </div>
 
@@ -320,7 +361,7 @@ export default function SMSAuthForm() {
                   <div className="space-y-6">
                     <div className="text-center mb-6">
                       <p className="text-gray-600">
-                        <span className="font-semibold">{formData.phone}</span>{" "}
+                        <span className="font-semibold">{userInfo.phone}</span>{" "}
                         宛に
                         <br />
                         6桁の認証コードを送信しました
