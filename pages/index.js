@@ -146,11 +146,6 @@ export default function SMSAuthForm() {
 
       if (response.ok) {
         setSuccess(true);
-
-        // 3. プロラインのシナリオ移動を発火
-        if (uid) {
-          fireProlineBeacon(uid);
-        }
       } else {
         setError("メール送信に失敗しました");
       }
@@ -183,22 +178,6 @@ export default function SMSAuthForm() {
       console.error("❌ プロラインフォーム送信エラー:", error);
       return false;
     }
-  };
-
-  // プロラインのビーコン発火関数
-  const fireProlineBeacon = (userId) => {
-    console.log("🚀 プロラインシナリオ移動を実行:", userId);
-
-    const img = document.createElement("img");
-    img.src = `https://autosns.jp/api/call-beacon/y1mMjPcyJx/${userId}`;
-    img.style.display = "none";
-    img.onload = () => {
-      console.log("✅ プロラインシナリオ移動成功");
-    };
-    img.onerror = () => {
-      console.error("❌ プロラインシナリオ移動失敗");
-    };
-    document.body.appendChild(img);
   };
 
   const handleResend = () => {

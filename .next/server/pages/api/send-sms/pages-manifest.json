@@ -1,0 +1,3 @@
+{
+  "/api/send-sms": "pages/api/send-sms.js"
+}
