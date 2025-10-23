@@ -310,10 +310,10 @@ export default function SMSAuthForm() {
                           setUserInfo({ ...userInfo, phone: e.target.value })
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="例）090-1234-5678"
+                        placeholder="例）09012345678"
                       />
                       <p className="mt-1 text-xs text-gray-500">
-                        ハイフンあり・なしどちらでもOK
+                        ※ハイフンなしでご入力ください。
                       </p>
                     </div>
 
