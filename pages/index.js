@@ -268,7 +268,7 @@ export default function SMSAuthForm() {
                 </p>
               </div>
               <a
-                href="https://u28edw94.autosns.app/line"
+                href="https://lin.ee/Tp5L2mv"
                 className="inline-block w-full bg-[#00C300] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#00B300] transition shadow-md hover:shadow-lg"
               >
                 LINEへ戻る
