@@ -131,8 +131,12 @@ export default function SMSAuthForm() {
         return;
       }
 
-      // 2. メール送信
-      const response = await fetch("/api/submit-form", {
+      // プロライン送信が成功した時点で成功画面に遷移
+      console.log("✅ プロラインフォーム送信完了 - 成功画面に遷移します");
+      setSuccess(true);
+
+      // 2. メール送信（バックグラウンドで実行、エラーは無視）
+      fetch("/api/submit-form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -142,13 +146,10 @@ export default function SMSAuthForm() {
           diagnosisType: "",
           uid: uid,
         }),
+      }).catch((err) => {
+        console.error("メール送信エラー（無視）:", err);
+        // メール送信のエラーは無視し、成功画面は維持
       });
-
-      if (response.ok) {
-        setSuccess(true);
-      } else {
-        setError("メール送信に失敗しました");
-      }
     } catch (err) {
       console.error("送信エラー:", err);
       setError("送信エラーが発生しました");
