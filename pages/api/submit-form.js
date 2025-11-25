@@ -31,6 +31,7 @@ export default async function handler(req, res) {
 ■ 申込情報
 ━━━━━━━━━━━━━━━━━━━━━━
 
+ユーザーID: ${uid || "未設定"}
 お名前: ${name}
 電話番号: ${phone}
 診断タイプ: 感覚派スナイパー
@@ -46,7 +47,7 @@ export default async function handler(req, res) {
     const params = {
       Source: process.env.SES_FROM_EMAIL,
       Destination: {
-        ToAddresses: [process.env.SES_TO_EMAIL],
+        ToAddresses: ["hirapro.sharea@gmail.com"],
       },
       Message: {
         Subject: {
@@ -64,7 +65,7 @@ export default async function handler(req, res) {
 
     console.log("=== メール送信情報 ===");
     console.log("送信元:", process.env.SES_FROM_EMAIL);
-    console.log("送信先:", process.env.SES_TO_EMAIL);
+    console.log("送信先: hirapro.sharea@gmail.com");
     console.log("件名:", `【新規申込】${name}様 - 投資診断結果`);
     console.log("====================");
 
